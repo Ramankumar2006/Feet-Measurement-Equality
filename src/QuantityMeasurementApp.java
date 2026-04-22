@@ -3,13 +3,13 @@ package com.apps.quantitymeasurement;
 import java.util.Objects;
 
 /**
- * QuantityMeasurementApp - UC6: Addition of Length Units
- * This implementation allows adding different length units and returns the
- * result in the unit of the first operand.
+ * QuantityMeasurementApp - Final Implementation (UC1 - UC7)
+ * Handles multiple length units, equality checks, unit conversion,
+ * and advanced addition with explicit target units.
  */
 public class QuantityMeasurementApp {
 
-    // --- ENUM: Unit Definitions ---
+    // --- ENUM: Centralized Unit Factors (Base Unit: INCHES) ---
     public enum LengthUnit {
         FEET(12.0),
         INCHES(1.0),
@@ -27,82 +27,76 @@ public class QuantityMeasurementApp {
         }
     }
 
-    // --- CLASS: QuantityLength (Immutable Value Object) ---
+    // --- CLASS: Immutable QuantityLength Value Object ---
     public static class QuantityLength {
         private final double value;
         private final LengthUnit unit;
 
         public QuantityLength(double value, LengthUnit unit) {
-            if (!Double.isFinite(value)) throw new IllegalArgumentException("Invalid value");
+            if (!Double.isFinite(value)) {
+                throw new IllegalArgumentException("Measurement value must be a finite number.");
+            }
             this.value = value;
-            this.unit = Objects.requireNonNull(unit, "Unit cannot be null");
+            this.unit = Objects.requireNonNull(unit, "Unit cannot be null.");
         }
 
         public double getValue() { return value; }
         public LengthUnit getUnit() { return unit; }
 
-        /**
-         * Instance method: Adds another length to this one.
-         * The result unit is inherited from 'this' object.
-         */
-        public QuantityLength add(QuantityLength that) {
-            if (that == null) throw new IllegalArgumentException("Operand cannot be null");
+        // --- ARITHMETIC API (UC6 & UC7) ---
 
-            // Step 1: Convert both to base unit (Inches)
+        /** Implicit addition: returns result in the unit of the first operand. */
+        public QuantityLength add(QuantityLength that) {
+            return this.add(that, this.unit);
+        }
+
+        /** Explicit addition: returns result in a user-specified target unit. */
+        public QuantityLength add(QuantityLength that, LengthUnit targetUnit) {
+            if (that == null) throw new IllegalArgumentException("Second operand cannot be null.");
+            if (targetUnit == null) throw new IllegalArgumentException("Target unit cannot be null.");
+
+            // Normalize to base unit (Inches), sum, and convert back
             double sumInBase = (this.value * this.unit.getConversionFactor()) +
                     (that.value * that.unit.getConversionFactor());
 
-            // Step 2: Convert sum back to 'this' unit
-            double finalValue = sumInBase / this.unit.getConversionFactor();
+            double finalValue = sumInBase / targetUnit.getConversionFactor();
 
-            return new QuantityLength(finalValue, this.unit);
+            // UC7: Precision rounding to 3 decimal places
+            double roundedValue = Math.round(finalValue * 1000.0) / 1000.0;
+            return new QuantityLength(roundedValue, targetUnit);
         }
+
+        // --- EQUALITY CONTRACT (UC1, UC2, UC3, UC4) ---
 
         @Override
         public boolean equals(Object obj) {
             if (this == obj) return true;
             if (obj == null || getClass() != obj.getClass()) return false;
             QuantityLength that = (QuantityLength) obj;
-            // Use 0.01 epsilon for CM precision handling
-            return Math.abs((this.value * this.unit.getConversionFactor()) -
-                    (that.value * that.unit.getConversionFactor())) < 0.01;
+
+            // Compare by base values with an epsilon tolerance for precision
+            double thisBase = this.value * this.unit.getConversionFactor();
+            double thatBase = that.value * that.unit.getConversionFactor();
+            return Math.abs(thisBase - thatBase) < 0.01;
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(value * unit.getConversionFactor());
         }
 
         @Override
         public String toString() {
-            return String.format("Quantity(%.2f, %s)", value, unit);
+            return String.format("Quantity(%.3f, %s)", value, unit);
         }
     }
 
-    // --- API DEMONSTRATION ---
-
-    public static void demonstrateAddition(QuantityLength l1, QuantityLength l2) {
-        QuantityLength result = l1.add(l2);
-        System.out.println("Input:  Adding " + l1 + " and " + l2);
-        System.out.println("Output: " + result + "\n");
-    }
-
     public static void main(String[] args) {
-        System.out.println("=== UC6: Addition of Length Units ===\n");
+        System.out.println("--- Quantity Measurement App: UC7 Final Run ---");
+        QuantityLength oneYard = new QuantityLength(1.0, LengthUnit.YARDS);
+        QuantityLength threeFeet = new QuantityLength(3.0, LengthUnit.FEET);
 
-        // Feet + Feet
-        demonstrateAddition(new QuantityLength(1.0, LengthUnit.FEET),
-                new QuantityLength(2.0, LengthUnit.FEET));
-
-        // Feet + Inches (1ft + 12in = 2ft)
-        demonstrateAddition(new QuantityLength(1.0, LengthUnit.FEET),
-                new QuantityLength(12.0, LengthUnit.INCHES));
-
-        // Inches + Feet (12in + 1ft = 24in)
-        demonstrateAddition(new QuantityLength(12.0, LengthUnit.INCHES),
-                new QuantityLength(1.0, LengthUnit.FEET));
-
-        // Yards + Feet (1yd + 3ft = 2yd)
-        demonstrateAddition(new QuantityLength(1.0, LengthUnit.YARDS),
-                new QuantityLength(3.0, LengthUnit.FEET));
-
-        // Centimeters + Inches
-        demonstrateAddition(new QuantityLength(2.54, LengthUnit.CENTIMETERS),
-                new QuantityLength(1.0, LengthUnit.INCHES));
+        System.out.println("1 Yard + 3 Feet (Result in Feet): " + oneYard.add(threeFeet, LengthUnit.FEET));
+        System.out.println("1 Yard + 3 Feet (Result in Yards): " + oneYard.add(threeFeet, LengthUnit.YARDS));
     }
 }

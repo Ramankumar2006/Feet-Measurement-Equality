@@ -36,23 +36,22 @@ public class QuantityMeasurementApp {
             return value;
         }
 
-        public QuantityLength add(QuantityLength other) {
-            if (other == null) throw new IllegalArgumentException();
+        public QuantityLength convertTo(LengthUnit targetUnit) {
+            if (targetUnit == null) throw new IllegalArgumentException();
+            double base = unit.toBase(value);
+            double converted = targetUnit.fromBase(base);
+            return new QuantityLength(converted, targetUnit);
+        }
 
-            double base1 = unit.toBase(value);
-            double base2 = other.unit.toBase(other.value);
-
-            double sum = base1 + base2;
-            double result = unit.fromBase(sum);
-
-            return new QuantityLength(result, unit);
+        public static double convert(double value, LengthUnit source, LengthUnit target) {
+            if (source == null || target == null) throw new IllegalArgumentException();
+            if (Double.isNaN(value) || Double.isInfinite(value)) throw new IllegalArgumentException();
+            double base = source.toBase(value);
+            return target.fromBase(base);
         }
     }
 
     public static void main(String[] args) {
-        QuantityLength q1 = new QuantityLength(1.0, LengthUnit.FEET);
-        QuantityLength q2 = new QuantityLength(12.0, LengthUnit.INCHES);
-
-        System.out.println(q1.add(q2).getValue());
+        System.out.println(QuantityLength.convert(1.0, LengthUnit.FEET, LengthUnit.INCHES));
     }
 }

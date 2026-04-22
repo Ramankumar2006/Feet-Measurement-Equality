@@ -15,15 +15,12 @@ public class QuantityMeasurementApp {
         public double toBase(double value) {
             return value * factor;
         }
-
-        public double fromBase(double baseValue) {
-            return baseValue / factor;
-        }
     }
 
     static class QuantityLength {
         private final double value;
         private final LengthUnit unit;
+        private static final double EPSILON = 0.0001;
 
         public QuantityLength(double value, LengthUnit unit) {
             if (unit == null) throw new IllegalArgumentException();
@@ -32,26 +29,24 @@ public class QuantityMeasurementApp {
             this.unit = unit;
         }
 
-        public double getValue() {
-            return value;
-        }
+        @Override
+        public boolean equals(Object obj) {
+            if (this == obj) return true;
+            if (!(obj instanceof QuantityLength)) return false;
 
-        public QuantityLength convertTo(LengthUnit targetUnit) {
-            if (targetUnit == null) throw new IllegalArgumentException();
-            double base = unit.toBase(value);
-            double converted = targetUnit.fromBase(base);
-            return new QuantityLength(converted, targetUnit);
-        }
+            QuantityLength other = (QuantityLength) obj;
 
-        public static double convert(double value, LengthUnit source, LengthUnit target) {
-            if (source == null || target == null) throw new IllegalArgumentException();
-            if (Double.isNaN(value) || Double.isInfinite(value)) throw new IllegalArgumentException();
-            double base = source.toBase(value);
-            return target.fromBase(base);
+            double base1 = unit.toBase(value);
+            double base2 = other.unit.toBase(other.value);
+
+            return Math.abs(base1 - base2) < EPSILON;
         }
     }
 
     public static void main(String[] args) {
-        System.out.println(QuantityLength.convert(1.0, LengthUnit.FEET, LengthUnit.INCHES));
+        QuantityLength q1 = new QuantityLength(1.0, LengthUnit.YARDS);
+        QuantityLength q2 = new QuantityLength(3.0, LengthUnit.FEET);
+
+        System.out.println(q1.equals(q2));
     }
 }

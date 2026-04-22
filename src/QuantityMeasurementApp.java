@@ -1,14 +1,13 @@
 public class QuantityMeasurementApp {
 
-    public enum LengthUnit {
-        FEET(1.0),
-        INCHES(1.0 / 12.0),
-        YARDS(3.0),
-        CENTIMETERS(1.0 / 30.48);
+    public enum WeightUnit {
+        KILOGRAM(1.0),
+        GRAM(0.001),
+        POUND(0.453592);
 
         private final double factor;
 
-        LengthUnit(double factor) {
+        WeightUnit(double factor) {
             this.factor = factor;
         }
 
@@ -21,12 +20,12 @@ public class QuantityMeasurementApp {
         }
     }
 
-    static class QuantityLength {
+    static class QuantityWeight {
         private final double value;
-        private final LengthUnit unit;
+        private final WeightUnit unit;
         private static final double EPSILON = 0.0001;
 
-        public QuantityLength(double value, LengthUnit unit) {
+        public QuantityWeight(double value, WeightUnit unit) {
             if (unit == null) throw new IllegalArgumentException();
             if (Double.isNaN(value) || Double.isInfinite(value)) throw new IllegalArgumentException();
             this.value = value;
@@ -37,25 +36,29 @@ public class QuantityMeasurementApp {
             return value;
         }
 
-        public QuantityLength convertTo(LengthUnit targetUnit) {
+        public QuantityWeight convertTo(WeightUnit targetUnit) {
             double base = unit.convertToBaseUnit(value);
             double converted = targetUnit.convertFromBaseUnit(base);
-            return new QuantityLength(converted, targetUnit);
+            return new QuantityWeight(converted, targetUnit);
         }
 
-        public QuantityLength add(QuantityLength other, LengthUnit targetUnit) {
+        public QuantityWeight add(QuantityWeight other) {
+            return add(other, this.unit);
+        }
+
+        public QuantityWeight add(QuantityWeight other, WeightUnit targetUnit) {
             double base1 = unit.convertToBaseUnit(value);
             double base2 = other.unit.convertToBaseUnit(other.value);
             double sum = base1 + base2;
             double result = targetUnit.convertFromBaseUnit(sum);
-            return new QuantityLength(result, targetUnit);
+            return new QuantityWeight(result, targetUnit);
         }
 
         @Override
         public boolean equals(Object obj) {
             if (this == obj) return true;
-            if (!(obj instanceof QuantityLength)) return false;
-            QuantityLength other = (QuantityLength) obj;
+            if (obj == null || this.getClass() != obj.getClass()) return false;
+            QuantityWeight other = (QuantityWeight) obj;
             double base1 = unit.convertToBaseUnit(value);
             double base2 = other.unit.convertToBaseUnit(other.value);
             return Math.abs(base1 - base2) < EPSILON;
@@ -63,11 +66,11 @@ public class QuantityMeasurementApp {
     }
 
     public static void main(String[] args) {
-        QuantityLength q1 = new QuantityLength(1.0, LengthUnit.FEET);
-        QuantityLength q2 = new QuantityLength(12.0, LengthUnit.INCHES);
+        QuantityWeight q1 = new QuantityWeight(1.0, WeightUnit.KILOGRAM);
+        QuantityWeight q2 = new QuantityWeight(1000.0, WeightUnit.GRAM);
 
-        System.out.println(q1.convertTo(LengthUnit.INCHES).getValue());
-        System.out.println(q1.add(q2, LengthUnit.FEET).getValue());
         System.out.println(q1.equals(q2));
+        System.out.println(q1.convertTo(WeightUnit.GRAM).getValue());
+        System.out.println(q1.add(q2).getValue());
     }
 }

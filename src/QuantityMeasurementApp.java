@@ -1,34 +1,58 @@
-package com.apps.quantitymeasurement;
-
 public class QuantityMeasurementApp {
 
-    // Inner class to represent Feet measurement
-    public static class Feet {
-        private final double value;
+    public enum LengthUnit {
+        FEET(1.0),
+        INCHES(1.0 / 12.0),
+        YARDS(3.0),
+        CENTIMETERS(1.0 / 30.48);
 
-        public Feet(double value) {
-            this.value = value;
+        private final double factor;
+
+        LengthUnit(double factor) {
+            this.factor = factor;
         }
 
-        @Override
-        public boolean equals(Object obj) {
-            // 1. Reference Check
-            if (this == obj) return true;
+        public double toBase(double value) {
+            return value * factor;
+        }
 
-            // 2. Null Check & 3. Type Check
-            if (obj == null || getClass() != obj.getClass()) return false;
+        public double fromBase(double baseValue) {
+            return baseValue / factor;
+        }
+    }
 
-            // 4. Value Comparison
-            Feet feet = (Feet) obj;
-            return Double.compare(feet.value, this.value) == 0;
+    static class QuantityLength {
+        private final double value;
+        private final LengthUnit unit;
+
+        public QuantityLength(double value, LengthUnit unit) {
+            if (unit == null) throw new IllegalArgumentException();
+            if (Double.isNaN(value) || Double.isInfinite(value)) throw new IllegalArgumentException();
+            this.value = value;
+            this.unit = unit;
+        }
+
+        public double getValue() {
+            return value;
+        }
+
+        public QuantityLength add(QuantityLength other) {
+            if (other == null) throw new IllegalArgumentException();
+
+            double base1 = unit.toBase(value);
+            double base2 = other.unit.toBase(other.value);
+
+            double sum = base1 + base2;
+            double result = unit.fromBase(sum);
+
+            return new QuantityLength(result, unit);
         }
     }
 
     public static void main(String[] args) {
-        Feet firstFeet = new Feet(1.0);
-        Feet secondFeet = new Feet(1.0);
+        QuantityLength q1 = new QuantityLength(1.0, LengthUnit.FEET);
+        QuantityLength q2 = new QuantityLength(12.0, LengthUnit.INCHES);
 
-        System.out.println("Input: 1.0 ft and 1.0 ft");
-        System.out.println("Output: Equal (" + firstFeet.equals(secondFeet) + ")");
+        System.out.println(q1.add(q2).getValue());
     }
 }

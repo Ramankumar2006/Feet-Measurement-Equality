@@ -2,7 +2,7 @@ package com.apps.quantitymeasurement;
 
 public class QuantityMeasurementApp {
 
-    // Inner class to represent Feet measurement
+
     public static class Feet {
         private final double value;
 
@@ -12,13 +12,13 @@ public class QuantityMeasurementApp {
 
         @Override
         public boolean equals(Object obj) {
-            // 1. Reference Check
+
             if (this == obj) return true;
 
-            // 2. Null Check & 3. Type Check
+
             if (obj == null || getClass() != obj.getClass()) return false;
 
-            // 4. Value Comparison
+
             Feet feet = (Feet) obj;
             return Double.compare(feet.value, this.value) == 0;
         }
